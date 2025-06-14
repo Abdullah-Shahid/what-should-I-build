@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Projects - What Should I Build?</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font imports -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Responsive footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer p {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .footer {
+                padding: 15px 0;
+            }
+        }
+
+        /* General responsiveness improvements */
+        .container-fluid {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+
+        .justify-content-between {
+            justify-content: space-between;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        /* Adjustments for project cards */
+        .project-card {
+            margin-bottom: 20px;
+        }
+
+        /* Adjustments for history timeline */
+        .history-timeline .history-item {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{{ url_for('landing') }}">
+                <i data-feather="zap" class="me-2"></i>
+                What Should I Build?
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{{ url_for('landing') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{{ url_for('generator') }}">Generate Ideas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold active" href="{{ url_for('projects') }}">My Projects</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid px-4 py-5">
+        <!-- Header Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h1 class="display-5 fw-bold text-primary mb-2">My Project Ideas</h1>
+                        <p class="lead text-muted">Your AI-generated project collection and history</p>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('generator') }}" class="btn btn-outline-primary">
+                            <i data-feather="plus" class="me-2"></i>
+                            Generate New Ideas
+                        </a>
+                        {% if session.get('project_history') %}
+                        <form method="POST" action="{{ url_for('clear_history') }}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear all project history?')">
+                                <i data-feather="trash-2" class="me-2"></i>
+                                Clear History
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Session Ideas -->
+        {% if ideas %}
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="card-title mb-0">
+                                <i data-feather="cpu" class="me-2 text-success"></i>
+                                Current Session Ideas
+                            </h3>
+                            {% if current_idea %}
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i data-feather="download" class="me-1"></i>
+                                    Export Ideas
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('export_ideas', format_type='pdf', idea_id=current_idea.id) }}">
+                                        <i data-feather="file-text" class="me-2"></i>PDF Document
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('export_ideas', format_type='markdown', idea_id=current_idea.id) }}">
+                                        <i data-feather="code" class="me-2"></i>Markdown File
+                                    </a></li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            {% for idea in ideas %}
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                                <div class="project-card h-100">
+                                    <div class="project-card-header">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h5 class="project-title">
+                                                <span class="project-number">{{ loop.index }}</span>
+                                                {{ idea.name }}
+                                            </h5>
+                                            {% if idea.difficulty %}
+                                            <span class="badge difficulty-{{ idea.difficulty.lower() }}">{{ idea.difficulty }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {% if idea.description %}
+                                    <div class="project-description mb-3">
+                                        <p class="mb-0">{{ idea.description }}</p>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="project-details mb-3">
+                                        {% if idea.technologies %}
+                                        <div class="detail-row">
+                                            <i data-feather="cpu" class="detail-icon text-primary"></i>
+                                            <div class="detail-content">
+                                                <strong>Technologies:</strong>
+                                                <span class="text-muted">{{ idea.technologies }}</span>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if idea.time %}
+                                        <div class="detail-row">
+                                            <i data-feather="clock" class="detail-icon text-success"></i>
+                                            <div class="detail-content">
+                                                <strong>Timeline:</strong>
+                                                <span class="text-muted">{{ idea.time }}</span>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if idea.learning %}
+                                    <div class="learning-section mt-auto">
+                                        <div class="learning-header">
+                                            <i data-feather="book-open" class="me-2 text-secondary"></i>
+                                            <strong>Learning Outcomes</strong>
+                                        </div>
+                                        <p class="learning-text">{{ idea.learning }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Project History -->
+        {% if session.get('project_history') %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h3 class="card-title mb-4">
+                            <i data-feather="clock" class="me-2 text-info"></i>
+                            Project History
+                        </h3>
+
+                        <div class="history-timeline">
+                            {% for entry in session.project_history %}
+                            <div class="history-item">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="fw-bold text-primary mb-1">{{ entry.name }}</h5>
+                                        <div class="history-date">
+                                            <i data-feather="calendar" class="me-2"></i>
+                                            {{ entry.timestamp.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </div>
+                                    </div>
+                                    <div class="generated-ideas-count">
+                                        <span class="badge bg-primary">
+                                            {{ entry.ideas | length }} Ideas
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="history-details">
+                                    <div class="history-criteria mb-3">
+                                        <div class="criteria-grid">
+                                            <div class="criteria-item">
+                                                <strong>Skills:</strong> {{ entry.skills }}
+                                            </div>
+                                            <div class="criteria-item">
+                                                <strong>Interests:</strong> {{ entry.interests }}
+                                            </div>
+                                            <div class="criteria-item">
+                                                <strong>Experience:</strong> {{ entry.experience_level.title() }}
+                                            </div>
+                                            <div class="criteria-item">
+                                                <strong>Type:</strong> {{ entry.project_type.title() }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="#ideas-{{ entry.id }}" aria-expanded="false">
+                                            <i data-feather="eye" class="me-1"></i>
+                                            View Generated Ideas
+                                        </button>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i data-feather="download" class="me-1"></i>
+                                                Export
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{{ url_for('export_ideas', format_type='pdf', idea_id=entry.id) }}">
+                                                    <i data-feather="file-text" class="me-2"></i>PDF
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('export_ideas', format_type='markdown', idea_id=entry.id) }}">
+                                                    <i data-feather="code" class="me-2"></i>Markdown
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="collapse mt-3" id="ideas-{{ entry.id }}">
+                                        <div class="card card-body bg-light">
+                                            <div class="row g-3">
+                                                {% for idea in entry.ideas %}
+                                                <div class="col-md-6">
+                                                    <div class="small-project-card">
+                                                        <h6 class="fw-bold text-primary mb-2">
+                                                            <span class="me-2">{{ loop.index }}.</span>{{ idea.name }}
+                                                        </h6>
+                                                        {% if idea.description %}
+                                                        <p class="small text-muted mb-2">{{ idea.description[:100] }}{% if idea.description|length > 100 %}...{% endif %}</p>
+                                                        {% endif %}
+                                                        {% if idea.technologies %}
+                                                        <div class="small text-primary">
+                                                            <i data-feather="cpu" class="me-1" style="width: 12px; height: 12px;"></i>
+                                                            {{ idea.technologies }}
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-4">
+                        <i data-feather="folder" class="text-muted" style="width: 64px; height: 64px;"></i>
+                    </div>
+                    <h3 class="text-muted mb-3">No Project History Yet</h3>
+                    <p class="text-muted mb-4">Start generating project ideas to build your collection!</p>
+                    <a href="{{ url_for('generator') }}" class="btn btn-primary btn-lg">
+                        <i data-feather="plus" class="me-2"></i>
+                        Create Your First Project Ideas
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 What Should I Build? All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Initialize Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
+    </script>
+</body>
+</html>
